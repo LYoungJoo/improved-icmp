@@ -1,0 +1,120 @@
+#!/usr/bin/python3
+import os
+import socket
+import struct
+import select
+import time
+import sys
+
+ICMP_ECHO_REQUEST = 8
+
+def checksum(source_string):
+    countTo = (int(len(source_string)/2))*2
+    sum = 0
+    count = 0
+    loByte = 0
+    hiByte = 0
+    while count < countTo:
+        if (sys.byteorder == "little"):
+            loByte = source_string[count]
+            hiByte = source_string[count + 1]
+        else:
+            loByte = source_string[count + 1]
+            hiByte = source_string[count]
+        sum = sum + (hiByte * 256 + loByte)
+        count += 2
+
+    if countTo < len(source_string):
+        loByte = source_string[len(source_string)-1]
+        sum += loByte
+
+    sum &= 0xffffffff 
+
+    sum = (sum >> 16) + (sum & 0xffff)
+    sum += (sum >> 16)
+
+    answer = ~sum
+    answer = answer & 0xffff
+
+    answer = answer >> 8 | (answer << 8 & 0xff00)
+
+    return answer
+
+
+def create_packet(id):
+    header = struct.pack("bbHHh", 8, 0, 0, id, 1)
+
+    data = '' 
+
+    header = struct.pack("bbHHh", 8, 0, checksum(header + data), id, 1)
+    return header + data
+
+def ping(host):
+    host = socket.gethostbyname(host)
+
+    icmp = socket.getprotobyname("icmp")
+    try:
+        my_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+    except PermissionError:
+        raise PermissionError("You need to be root to execute this.")
+
+    my_ID = os.getpid() & 0xFFFF
+
+    send_one_ping(my_socket, host, my_ID)
+    delay = receive_one_ping(my_socket, my_ID, time.time(), host)
+
+    my_socket.close()
+    return delay
+
+def send_one_ping(my_socket, dest_addr, ID):
+    dest_addr = socket.gethostbyname(dest_addr)
+
+    my_checksum = 0
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, my_checksum, ID, 1)
+    bytesInDouble = struct.calcsize("d")
+
+    data = b''
+    my_checksum = checksum(header + data)
+
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, socket.htons(my_checksum), ID, 1)
+    packet = header + data
+    my_socket.sendto(packet, (dest_addr, 1)) 
+
+def receive_one_ping(my_socket, ID, time_sent, dest_addr):
+    timeLeft = 1
+    startedSelect = time.time()
+    whatReady = select.select([my_socket], [], [], timeLeft)
+    howLongInSelect = (time.time() - startedSelect)
+    if whatReady[0] == []:  # Timeout
+        return
+
+    timeReceived = time.time()
+    recPacket, addr = my_socket.recvfrom(1024)
+    icmpHeader = recPacket[20:28]
+    type, code, checksum, packetID, sequence = struct.unpack("bbHHh", icmpHeader)
+
+    data = recPacket[28:] 
+
+    return ''
+
+def main():
+    if len(sys.argv) == 1:
+        print("usage: ./sendPacket count")
+        exit()
+
+    result = 0
+    for i in range(int(sys.argv[1])):
+        start = time.time()
+        v = ping("192.168.0.123")
+        result += time.time() - start
+        if v == False:
+            print("error : signature is not valid")
+            exit()
+        if (i % 10 == 0):
+            print(i,"..")
+
+    print("average execution time : ", result/int(sys.argv[1]))
+
+
+if __name__ == '__main__':
+    main()
