@@ -28,28 +28,27 @@ This is the link that I used to set up : https://gist.github.com/extremecoders-r
 ### Result
 
 ```
-./sendPacket 1000
+./sendPacket 100
+0 ..
 10 ..
 20 ..
 ..
-980 ..
-990 ..
-average execution time :  0.08657945275306701
+90 ..
+average execution time :  0.08673075437545777
 ```
 Improved Version
-=> 866 ms
+=> 867 ms
 
 ```
-./sendPacket 1000
+./sendPacket 100
 10 ..
 20 ..
 ..
-980 ..
-990 ..
+90 ..
 average execution time :  0.00018363356590270997
 ```
 Normal Version
 => 2 ms
 
-433x slower.
+433.5x slower.
 
