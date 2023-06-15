@@ -23,10 +23,8 @@ tap0: flags=4419<UP,BROADCAST,RUNNING,PROMISC,MULTICAST>  mtu 1500
 Please set up the network before executing this expermient.
 This is the link that I used to set up : https://gist.github.com/extremecoders-re/e8fd8a67a515fee0c873dcafc81d811c
 
+<hr>
 ### Result
-
-<br>Improved Version<br>
-
 ```
 ./sendPacket 1000
 10 ..
@@ -36,9 +34,8 @@ This is the link that I used to set up : https://gist.github.com/extremecoders-r
 990 ..
 average execution time :  0.08657945275306701
 ```
-866 ms
-
-<br>Normal Version<br>
+Improved Version
+=> 866 ms
 
 ```
 ./sendPacket 1000
@@ -49,7 +46,8 @@ average execution time :  0.08657945275306701
 990 ..
 average execution time :  0.00018363356590270997
 ```
-2 ms
+Normal Version
+=> 2 ms
 
-433x slower ..
+433x slower.
 
